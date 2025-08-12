@@ -1,18 +1,23 @@
+import { db } from '../db';
+import { deliveriesTable } from '../db/schema';
 import { type GetDeliveryByOrderInput, type Delivery } from '../schema';
+import { eq } from 'drizzle-orm';
 
 export const getDeliveryByOrder = async (input: GetDeliveryByOrderInput): Promise<Delivery | null> => {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is fetching delivery information for a specific order.
-    return Promise.resolve({
-        id: 0, // Placeholder ID
-        order_id: input.order_id,
-        status: 'pending',
-        estimated_delivery_time: null,
-        actual_delivery_time: null,
-        delivery_person_name: null,
-        delivery_person_phone: null,
-        tracking_notes: null,
-        created_at: new Date(),
-        updated_at: new Date()
-    } as Delivery);
+  try {
+    const result = await db.select()
+      .from(deliveriesTable)
+      .where(eq(deliveriesTable.order_id, input.order_id))
+      .execute();
+
+    if (result.length === 0) {
+      return null;
+    }
+
+    const delivery = result[0];
+    return delivery;
+  } catch (error) {
+    console.error('Failed to fetch delivery by order:', error);
+    throw error;
+  }
 };

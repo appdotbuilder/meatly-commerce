@@ -1,14 +1,28 @@
+import { db } from '../db';
+import { cartItemsTable } from '../db/schema';
 import { type UpdateCartItemInput, type CartItem } from '../schema';
+import { eq, sql } from 'drizzle-orm';
 
 export const updateCartItem = async (input: UpdateCartItemInput): Promise<CartItem> => {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is updating the quantity of a specific cart item.
-    return Promise.resolve({
-        id: input.id,
-        user_id: 0, // Placeholder
-        product_id: 0, // Placeholder
+  try {
+    // Update the cart item quantity and set updated_at timestamp
+    const result = await db.update(cartItemsTable)
+      .set({
         quantity: input.quantity,
-        created_at: new Date(),
-        updated_at: new Date()
-    } as CartItem);
+        updated_at: sql`NOW()` // Use SQL NOW() function to get current timestamp
+      })
+      .where(eq(cartItemsTable.id, input.id))
+      .returning()
+      .execute();
+
+    // Check if cart item was found and updated
+    if (result.length === 0) {
+      throw new Error(`Cart item with id ${input.id} not found`);
+    }
+
+    return result[0];
+  } catch (error) {
+    console.error('Cart item update failed:', error);
+    throw error;
+  }
 };

@@ -1,15 +1,25 @@
+import { db } from '../db';
+import { usersTable } from '../db/schema';
+import { eq } from 'drizzle-orm';
 import { type User } from '../schema';
 
 export const getUser = async (id: number): Promise<User | null> => {
-    // This is a placeholder declaration! Real code should be implemented here.
-    // The goal of this handler is fetching a single user by ID from the database.
-    return Promise.resolve({
-        id: id,
-        email: 'placeholder@email.com',
-        full_name: 'Placeholder User',
-        phone: null,
-        address: null,
-        created_at: new Date(),
-        updated_at: new Date()
-    } as User);
+  try {
+    // Query the user by ID
+    const result = await db.select()
+      .from(usersTable)
+      .where(eq(usersTable.id, id))
+      .execute();
+
+    // Return null if user not found
+    if (result.length === 0) {
+      return null;
+    }
+
+    // Return the user (no numeric field conversions needed for users table)
+    return result[0];
+  } catch (error) {
+    console.error('User retrieval failed:', error);
+    throw error;
+  }
 };
